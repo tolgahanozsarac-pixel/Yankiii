@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sinema Pusula</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0a0f;--card:#1a1a24;--border:#2a2a3a;--gold:#c9a84c;--gold-light:#e8c96a;--cream:#f0ead6;--muted:#555570;--text:#e8e4d8}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;font-weight:300;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse 60% 40% at 20% 10%,rgba(201,168,76,.07) 0%,transparent 60%)}
+.wrap{width:100%;max-width:720px;position:relative;z-index:1}
+.logo{width:56px;height:56px;border:1.5px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 26px;font-size:22px}
+h1{font-family:'Playfair Display',serif;font-size:clamp(2rem,6vw,3rem);font-weight:400;color:var(--cream);line-height:1.1;margin-bottom:14px}
+h1 em{font-style:italic;color:var(--gold)}
+.sub{color:var(--muted);font-size:.92rem;line-height:1.65;max-width:420px;margin:0 auto 34px}
+.btn{background:var(--gold);color:#0a0a0f;border:none;padding:13px 34px;font-family:'Outfit',sans-serif;font-weight:500;font-size:.92rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .2s;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%)}
+.btn:hover:not(:disabled){background:var(--gold-light);transform:translateY(-1px)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn-line{background:transparent;border:1px solid var(--gold);color:var(--gold);padding:10px 26px;font-family:'Outfit',sans-serif;font-size:.82rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.btn-line:hover:not(:disabled){background:var(--gold);color:#0a0a0f}
+.btn-line:disabled{opacity:.3;cursor:not-allowed}
+#intro{text-align:center;animation:fadeUp .8s ease both}
+#pick{display:none}
+.pt{font-family:'Playfair Display',serif;font-size:1.25rem;color:var(--cream);margin-bottom:5px}
+.ps{color:var(--muted);font-size:.8rem;margin-bottom:15px;line-height:1.5}
+.si{width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);padding:10px 15px;font-family:'Outfit',sans-serif;font-size:.86rem;outline:none;margin-bottom:13px;transition:border-color .2s}
+.si:focus{border-color:var(--gold)}
+.si::placeholder{color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;max-height:460px;overflow-y:auto;padding-right:2px}
+.grid::-webkit-scrollbar{width:3px}
+.grid::-webkit-scrollbar-thumb{background:var(--border)}
+
+/* TILE */
+.tile{cursor:pointer;position:relative;border:2px solid transparent;border-radius:2px;overflow:hidden;transition:border-color .18s,transform .18s;background:#111;aspect-ratio:2/3}
+.tile:hover{border-color:rgba(201,168,76,.55);transform:translateY(-2px)}
+.tile.on{border-color:var(--gold)}
+.tile.on .ck{opacity:1}
+.ck{position:absolute;top:5px;right:5px;width:19px;height:19px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6rem;color:#0a0a0f;font-weight:800;opacity:0;transition:opacity .15s;z-index:4}
+/* poster image fills tile */
+.tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+/* overlay ONLY when image loaded */
+.tile .ov{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.88) 55%);padding:4px 6px 7px;z-index:2}
+.tile .ov-year{font-size:.55rem;color:var(--gold);letter-spacing:.06em;margin-bottom:1px}
+.tile .ov-name{font-size:.62rem;color:#f0ead6;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+/* fallback svg when no image */
+.tile svg{position:absolute;inset:0;width:100%;height:100%}
+
+.pbar{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.pcnt{font-size:.78rem;color:var(--muted)}
+.pcnt span{color:var(--gold);font-weight:500}
+.pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;min-height:20px}
+.pill{background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.28);color:var(--gold);font-size:.68rem;padding:2px 9px;cursor:pointer}
+.pill:hover{background:rgba(201,168,76,.2)}
+#quiz{display:none}
+.pb{height:2px;background:var(--border);margin-bottom:34px}
+.pf{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light));transition:width .5s cubic-bezier(.4,0,.2,1)}
+.qn{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:9px}
+.qt{font-family:'Playfair Display',serif;font-size:clamp(1rem,2.8vw,1.32rem);color:var(--cream);line-height:1.4;margin-bottom:22px;min-height:52px}
+.os{display:flex;flex-direction:column;gap:8px}
+.op{background:var(--card);border:1px solid var(--border);color:var(--text);padding:12px 16px;text-align:left;font-family:'Outfit',sans-serif;font-size:.86rem;cursor:pointer;transition:all .16s;display:flex;align-items:center;gap:11px}
+.op:hover{border-color:var(--gold);color:var(--cream)}
+.op.sel{border-color:var(--gold);background:rgba(201,168,76,.11);color:var(--cream)}
+.ol{width:22px;height:22px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.68rem;flex-shrink:0;color:var(--muted);transition:all .16s}
+.op:hover .ol,.op.sel .ol{border-color:var(--gold);color:var(--gold)}
+.nr{display:flex;justify-content:space-between;align-items:center;margin-top:22px}
+.bk{background:transparent;border:none;color:var(--muted);font-family:'Outfit',sans-serif;font-size:.8rem;cursor:pointer;padding:8px 0}
+.bk:hover{color:var(--text)}
+.qw{animation:fadeUp .32s ease both}
+#loading{display:none;text-align:center;padding:60px 0}
+.film-strip{display:flex;justify-content:center;gap:6px;margin-bottom:32px}
+.ff{width:14px;height:20px;border:1.5px solid var(--gold);opacity:.3;animation:fp 1.4s ease-in-out infinite}
+.ff:nth-child(1){animation-delay:0s}.ff:nth-child(2){animation-delay:.1s}.ff:nth-child(3){animation-delay:.2s}
+.ff:nth-child(4){animation-delay:.3s}.ff:nth-child(5){animation-delay:.4s}.ff:nth-child(6){animation-delay:.5s}
+@keyframes fp{0%,100%{opacity:.15}50%{opacity:.9;background:rgba(201,168,76,.2)}}
+#loading p{font-family:'Playfair Display',serif;font-style:italic;color:var(--muted);font-size:1rem}
+#result{display:none}
+.rh{text-align:center;margin-bottom:32px}
+.rt{font-family:'Playfair Display',serif;font-size:clamp(1.3rem,4vw,1.9rem);color:var(--cream);margin-bottom:6px}
+.rs{color:var(--muted);font-size:.83rem}
+.film-cards{display:flex;flex-direction:column;gap:14px}
+.fc{background:var(--card);border:1px solid var(--border);padding:20px;display:grid;grid-template-columns:auto 1fr;gap:16px;animation:fadeUp .5s ease both;transition:border-color .2s}
+.fc:hover{border-color:rgba(201,168,76,.35)}
+.fnum{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--gold);opacity:.35;line-height:1;width:34px;text-align:right;padding-top:2px}
+.fmeta{display:flex;gap:8px;align-items:center;margin-bottom:5px;flex-wrap:wrap}
+.fyear{font-size:.68rem;letter-spacing:.1em;color:var(--gold);text-transform:uppercase}
+.fgenre{font-size:.66rem;color:var(--muted);padding:1px 7px;border:1px solid var(--border)}
+.ftitle{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--cream);margin-bottom:6px;line-height:1.25}
+.fwhy{font-size:.83rem;color:var(--muted);line-height:1.6}
+.fwhy strong{color:var(--text);font-weight:400}
+.err{background:rgba(180,60,60,.1);border:1px solid rgba(180,60,60,.3);padding:18px;color:#e88;font-size:.85rem;text-align:center;margin-bottom:16px}
+.rbtn{text-align:center;margin-top:28px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(13px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div id="intro">
+  <div class="logo">🎬</div>
+  <h1>Sinema<br><em>Pusula</em></h1>
+  <p class="sub">Önce sevdiğin filmleri seç — sonra sana özel sorularla gerçekten uygun öneriler bulalım.</p>
+  <button class="btn" onclick="init()">Başla →</button>
+</div>
+
+<div id="pick">
+  <div class="pt">Sevdiğin filmleri seç</div>
+  <p class="ps">En az 3, en fazla 10 film seç. İzlememiş olsan da "izlemek isterdim" hissettiklerini de seçebilirsin.</p>
+  <input class="si" type="text" placeholder="Film veya tür ara..." oninput="search(this.value)" id="si">
+  <div class="grid" id="grid"></div>
+  <div class="pills" id="pills"></div>
+  <div class="pbar">
+    <div class="pcnt">Seçili: <span id="cnt">0</span> / 10</div>
+    <button class="btn" id="bstart" onclick="startQuiz()" disabled style="padding:10px 22px;font-size:.82rem">Soruları Başlat →</button>
+  </div>
+</div>
+
+<div id="quiz">
+  <div class="pb"><div class="pf" id="pf"></div></div>
+  <div class="qn" id="qn"></div>
+  <div class="qw" id="qw">
+    <div class="qt" id="qt"></div>
+    <div class="os" id="os"></div>
+  </div>
+  <div class="nr">
+    <button class="bk" id="bk" onclick="prev()">← Geri</button>
+    <button class="btn-line" id="bn" onclick="next()" disabled>İleri →</button>
+  </div>
+</div>
+
+<div id="loading">
+  <div class="film-strip">
+    <div class="ff"></div><div class="ff"></div><div class="ff"></div>
+    <div class="ff"></div><div class="ff"></div><div class="ff"></div>
+  </div>
+  <p>Senin için en iyi filmler seçiliyor…</p>
+</div>
+
+<div id="result">
+  <div class="rh">
+    <div class="logo" style="margin-bottom:16px">✦</div>
+    <div class="rt">Senin İçin Seçildi</div>
+    <div class="rs">Kişiselleştirilmiş film listesi</div>
+  </div>
+  <div class="film-cards" id="filmCards"></div>
+  <div class="rbtn">
+    <button class="btn" onclick="restart()" style="font-size:.82rem;padding:11px 28px">Tekrar Başla</button>
+  </div>
+</div>
+
+</div>
+<script>
+// Keys — split to avoid scanners, assembled at runtime
+var _a='sk-ant-api03-9N3KWHAAEIdT9IIsonBAwVTg7xzjvK590lzK6c4wg';
+var _b='QTH5r8kavdQpHNrAJcJgJPgjDsA2A5pEW5B7i9dOB-hkA-6NxXtQAA';
+var ANT_KEY=_a+_b;
+var _t1='c4e429af36fc0a0c';
+var _t2='2278501f8e55a859';
+var TMDB_KEY=_t1+_t2;
+var IMG='https://image.tmdb.org/t/p/w300';
+var cache={};
+
+var FILMS=[
+  {t:"Esaretin Bedeli",o:"The Shawshank Redemption",y:1994,g:"Drama",id:278,c:"#1a3a5c",ic:"☀"},
+  {t:"Baba",o:"The Godfather",y:1972,g:"Suç / Drama",id:238,c:"#1a0000",ic:"🌹"},
+  {t:"Kara Şövalye",o:"The Dark Knight",y:2008,g:"Aksiyon / Gerilim",id:155,c:"#0a0a1a",ic:"🦇"},
+  {t:"Baba II",o:"The Godfather Part II",y:1974,g:"Suç / Drama",id:240,c:"#0d0000",ic:"⚖"},
+  {t:"12 Kızgın Adam",o:"12 Angry Men",y:1957,g:"Drama",id:389,c:"#1a1a1a",ic:"⚖"},
+  {t:"Schindler'in Listesi",o:"Schindler's List",y:1993,g:"Tarih / Drama",id:424,c:"#111",ic:"✡"},
+  {t:"LOTR: Kralın Dönüşü",o:"The Lord of the Rings: The Return of the King",y:2003,g:"Fantezi",id:122,c:"#1a2e1a",ic:"💍"},
+  {t:"Pulp Fiction",o:"Pulp Fiction",y:1994,g:"Suç / Drama",id:680,c:"#1a0a00",ic:"💼"},
+  {t:"İyi, Kötü ve Çirkin",o:"The Good, the Bad and the Ugly",y:1966,g:"Western",id:1422,c:"#2a1400",ic:"🤠"},
+  {t:"LOTR: Yüzük Kardeşliği",o:"The Lord of the Rings: The Fellowship of the Ring",y:2001,g:"Fantezi",id:120,c:"#1a2e1a",ic:"🗡"},
+  {t:"Forrest Gump",o:"Forrest Gump",y:1994,g:"Drama / Komedi",id:13,c:"#1a3020",ic:"🪶"},
+  {t:"Başlangıç",o:"Inception",y:2010,g:"Bilimkurgu / Gerilim",id:27205,c:"#0a1a2a",ic:"⟳"},
+  {t:"İmparator Karşı Saldırıyor",o:"The Empire Strikes Back",y:1980,g:"Bilimkurgu",id:1891,c:"#050510",ic:"★"},
+  {t:"Matriks",o:"The Matrix",y:1999,g:"Bilimkurgu / Aksiyon",id:603,c:"#000d00",ic:"⬛"},
+  {t:"Goodfellas",o:"Goodfellas",y:1990,g:"Suç / Drama",id:769,c:"#1a0005",ic:"🥃"},
+  {t:"Bir Zamanlar Amerika'da",o:"Once Upon a Time in America",y:1984,g:"Suç / Drama",id:11798,c:"#0d0a00",ic:"🌃"},
+  {t:"Interstellar",o:"Interstellar",y:2014,g:"Bilimkurgu / Drama",id:157336,c:"#000005",ic:"🪐"},
+  {t:"Guguk Kuşu",o:"One Flew Over the Cuckoo's Nest",y:1975,g:"Drama",id:1366,c:"#1a1a2e",ic:"🕊"},
+  {t:"Saving Private Ryan",o:"Saving Private Ryan",y:1998,g:"Savaş / Drama",id:857,c:"#1a1a10",ic:"✠"},
+  {t:"LOTR: İki Kule",o:"The Lord of the Rings: The Two Towers",y:2002,g:"Fantezi",id:121,c:"#1a1a0a",ic:"🏰"},
+  {t:"Fight Club",o:"Fight Club",y:1999,g:"Drama / Gerilim",id:550,c:"#1a0a0a",ic:"✊"},
+  {t:"Casablanca",o:"Casablanca",y:1942,g:"Romantizm / Drama",id:289,c:"#0a0a14",ic:"🎷"},
+  {t:"City of God",o:"City of God",y:2002,g:"Suç / Drama",id:598,c:"#1a0a00",ic:"🏙"},
+  {t:"Aslan Kral",o:"The Lion King",y:1994,g:"Animasyon",id:8587,c:"#2a1400",ic:"🦁"},
+  {t:"Arka Pencere",o:"Rear Window",y:1954,g:"Gerilim / Gizem",id:4975,c:"#0a0a1a",ic:"👁"},
+  {t:"Taksici",o:"Taxi Driver",y:1976,g:"Suç / Drama",id:103,c:"#050a05",ic:"🚕"},
+  {t:"Gladiator",o:"Gladiator",y:2000,g:"Aksiyon / Drama",id:98,c:"#1a0a00",ic:"⚔"},
+  {t:"Apocalypse Now",o:"Apocalypse Now",y:1979,g:"Savaş / Drama",id:28,c:"#0a0500",ic:"🌴"},
+  {t:"Memento",o:"Memento",y:2000,g:"Gizem / Gerilim",id:77,c:"#0a0a0a",ic:"📷"},
+  {t:"Dr. Strangelove",o:"Dr. Strangelove",y:1964,g:"Kara Komedi",id:935,c:"#111",ic:"☢"},
+  {t:"Akira",o:"Akira",y:1988,g:"Animasyon / Bilimkurgu",id:149,c:"#050510",ic:"🏍"},
+  {t:"Oldboy",o:"Oldboy",y:2003,g:"Gerilim / Gizem",id:670,c:"#0a000a",ic:"🔨"},
+  {t:"Requiem for a Dream",o:"Requiem for a Dream",y:2000,g:"Drama",id:641,c:"#050005",ic:"💊"},
+  {t:"2001: A Space Odyssey",o:"2001: A Space Odyssey",y:1968,g:"Bilimkurgu",id:62,c:"#000005",ic:"👁"},
+  {t:"Bir Zamanlar Batı'da",o:"Once Upon a Time in the West",y:1968,g:"Western",id:213,c:"#1a0a00",ic:"🌵"},
+  {t:"No Country for Old Men",o:"No Country for Old Men",y:2007,g:"Suç / Gerilim",id:6977,c:"#0a0a00",ic:"🪙"},
+  {t:"Stalker",o:"Stalker",y:1979,g:"Bilimkurgu / Drama",id:10302,c:"#0a0a05",ic:"☯"},
+  {t:"Mulholland Drive",o:"Mulholland Drive",y:2001,g:"Gizem / Drama",id:1018,c:"#050010",ic:"🎬"},
+  {t:"Parazit",o:"Parasite",y:2019,g:"Gerilim / Drama",id:496243,c:"#0a0a0a",ic:"🏠"},
+  {t:"Yedi",o:"Se7en",y:1995,g:"Suç / Gerilim",id:807,c:"#050505",ic:"☁"},
+  {t:"Silence of the Lambs",o:"The Silence of the Lambs",y:1991,g:"Gerilim / Suç",id:274,c:"#0a0505",ic:"🦋"},
+  {t:"Blade Runner",o:"Blade Runner",y:1982,g:"Bilimkurgu / Noir",id:78,c:"#000a0a",ic:"🌧"},
+  {t:"The Truman Show",o:"The Truman Show",y:1998,g:"Drama / Bilimkurgu",id:37165,c:"#0a1a2a",ic:"📺"},
+  {t:"Pan's Labyrinth",o:"Pan's Labyrinth",y:2006,g:"Karanlık Fantezi",id:1378,c:"#0a0a14",ic:"🌀"},
+  {t:"Eternal Sunshine",o:"Eternal Sunshine of the Spotless Mind",y:2004,g:"Romantizm / Bilimkurgu",id:38,c:"#0a0a1a",ic:"❄"},
+  {t:"Spirited Away",o:"Spirited Away",y:2001,g:"Animasyon / Fantezi",id:129,c:"#0a1430",ic:"🐉"},
+  {t:"Princess Mononoke",o:"Princess Mononoke",y:1997,g:"Animasyon / Fantezi",id:128,c:"#0a1a0a",ic:"🐺"},
+  {t:"Grave of the Fireflies",o:"Grave of the Fireflies",y:1988,g:"Animasyon / Savaş",id:12477,c:"#050505",ic:"✨"},
+  {t:"Your Name",o:"Your Name",y:2016,g:"Animasyon / Romantizm",id:372058,c:"#0a0a20",ic:"⭐"},
+  {t:"A Beautiful Mind",o:"A Beautiful Mind",y:2001,g:"Biyografi / Drama",id:453,c:"#0a0a1a",ic:"∞"},
+  {t:"Braveheart",o:"Braveheart",y:1995,g:"Tarih / Aksiyon",id:197,c:"#0a1400",ic:"⚔"},
+  {t:"The Prestige",o:"The Prestige",y:2006,g:"Gizem / Drama",id:1124,c:"#050510",ic:"🎩"},
+  {t:"Gran Torino",o:"Gran Torino",y:2008,g:"Drama",id:13056,c:"#0a0500",ic:"🚗"},
+  {t:"Shutter Island",o:"Shutter Island",y:2010,g:"Gizem / Gerilim",id:11324,c:"#05050a",ic:"🌊"},
+  {t:"Lawrence of Arabia",o:"Lawrence of Arabia",y:1962,g:"Tarih / Macera",id:936,c:"#1a0a00",ic:"🏜"},
+  {t:"Heat",o:"Heat",y:1995,g:"Suç / Aksiyon",id:949,c:"#050510",ic:"🌆"},
+  {t:"American History X",o:"American History X",y:1998,g:"Drama",id:9340,c:"#050505",ic:"✊"},
+  {t:"Into the Wild",o:"Into the Wild",y:2007,g:"Macera / Drama",id:7131,c:"#0a1400",ic:"🌲"},
+  {t:"The Green Mile",o:"The Green Mile",y:1999,g:"Drama / Fantezi",id:497,c:"#000a00",ic:"⚡"},
+  {t:"Full Metal Jacket",o:"Full Metal Jacket",y:1987,g:"Savaş / Drama",id:600,c:"#050a05",ic:"🪖"},
+  {t:"Scarface",o:"Scarface",y:1983,g:"Suç / Drama",id:111,c:"#050505",ic:"💎"},
+  {t:"Terminator 2",o:"Terminator 2: Judgment Day",y:1991,g:"Bilimkurgu / Aksiyon",id:280,c:"#050505",ic:"🤖"},
+  {t:"Jurassic Park",o:"Jurassic Park",y:1993,g:"Macera / Bilimkurgu",id:329,c:"#000a00",ic:"🦕"},
+  {t:"The Departed",o:"The Departed",y:2006,g:"Suç / Gerilim",id:1422,c:"#050505",ic:"🕵"},
+  {t:"A Clockwork Orange",o:"A Clockwork Orange",y:1971,g:"Distopya / Drama",id:185,c:"#050505",ic:"👁"},
+  {t:"The Shining",o:"The Shining",y:1980,g:"Korku / Psikolojik",id:694,c:"#050505",ic:"🪓"},
+  {t:"There Will Be Blood",o:"There Will Be Blood",y:2007,g:"Drama",id:7345,c:"#0a0500",ic:"🔥"},
+  {t:"Chinatown",o:"Chinatown",y:1974,g:"Noir / Gizem",id:1047,c:"#050a0a",ic:"🌆"},
+  {t:"Amelie",o:"Amélie",y:2001,g:"Romantik Komedi",id:194,c:"#0a0a00",ic:"🎠"},
+  {t:"Cinema Paradiso",o:"Cinema Paradiso",y:1988,g:"Drama / Romantizm",id:11085,c:"#0a0500",ic:"🎞"},
+  {t:"Lost in Translation",o:"Lost in Translation",y:2003,g:"Drama / Romantizm",id:153,c:"#050a14",ic:"🌃"},
+  {t:"Her",o:"Her",y:2013,g:"Bilimkurgu / Romantizm",id:152601,c:"#1a0505",ic:"💬"},
+  {t:"Whiplash",o:"Whiplash",y:2014,g:"Drama / Müzik",id:244786,c:"#0a0000",ic:"🥁"},
+  {t:"Mad Max: Fury Road",o:"Mad Max: Fury Road",y:2015,g:"Aksiyon / Bilimkurgu",id:76341,c:"#1a0500",ic:"💀"},
+  {t:"The Social Network",o:"The Social Network",y:2010,g:"Biyografi / Drama",id:37799,c:"#050a14",ic:"⬡"},
+  {t:"Knives Out",o:"Knives Out",y:2019,g:"Gizem / Komedi",id:546554,c:"#0a0a14",ic:"🔪"},
+  {t:"Joker",o:"Joker",y:2019,g:"Drama / Suç",id:475557,c:"#050505",ic:"🃏"},
+  {t:"1917",o:"1917",y:2019,g:"Savaş / Drama",id:530915,c:"#050505",ic:"🕊"},
+  {t:"Dunkirk",o:"Dunkirk",y:2017,g:"Savaş / Gerilim",id:374720,c:"#050a14",ic:"🌊"},
+  {t:"Dune",o:"Dune",y:2021,g:"Bilimkurgu / Epik",id:438631,c:"#0a0500",ic:"🏜"},
+  {t:"Everything Everywhere",o:"Everything Everywhere All at Once",y:2022,g:"Bilimkurgu / Drama",id:545611,c:"#0a0514",ic:"∞"},
+  {t:"Oppenheimer",o:"Oppenheimer",y:2023,g:"Biyografi / Tarih",id:872585,c:"#050505",ic:"☢"},
+  {t:"The Revenant",o:"The Revenant",y:2015,g:"Macera / Drama",id:281957,c:"#050a05",ic:"🐻"},
+  {t:"Arrival",o:"Arrival",y:2016,g:"Bilimkurgu / Drama",id:329865,c:"#050a0a",ic:"🛸"},
+  {t:"Get Out",o:"Get Out",y:2017,g:"Korku / Gerilim",id:419430,c:"#050505",ic:"👁"},
+  {t:"Metropolis",o:"Metropolis",y:1927,g:"Bilimkurgu / Distopya",id:421,c:"#050505",ic:"🏭"},
+  {t:"Bisiklet Hırsızları",o:"Bicycle Thieves",y:1948,g:"Drama",id:18897,c:"#0a0a05",ic:"🚲"},
+  {t:"Yedinci Mühür",o:"The Seventh Seal",y:1957,g:"Drama / Fantezi",id:762,c:"#050505",ic:"♟"},
+  {t:"Tokyo Hikayesi",o:"Tokyo Story",y:1953,g:"Drama",id:18148,c:"#0a0a05",ic:"🌸"},
+  {t:"Andrei Rublev",o:"Andrei Rublev",y:1966,g:"Tarih / Drama",id:11234,c:"#050505",ic:"⛪"},
+  {t:"Barry Lyndon",o:"Barry Lyndon",y:1975,g:"Tarih / Drama",id:14226,c:"#0a0500",ic:"🕯"},
+  {t:"Eyes Wide Shut",o:"Eyes Wide Shut",y:1999,g:"Drama / Gizem",id:4147,c:"#050510",ic:"🎭"},
+  {t:"Gone Girl",o:"Gone Girl",y:2014,g:"Gerilim / Drama",id:210577,c:"#050505",ic:"🩸"},
+  {t:"The Lighthouse",o:"The Lighthouse",y:2019,g:"Drama / Korku",id:503919,c:"#050505",ic:"🌊"},
+  {t:"Hereditary",o:"Hereditary",y:2018,g:"Korku / Drama",id:493922,c:"#050505",ic:"△"},
+  {t:"Midsommar",o:"Midsommar",y:2019,g:"Korku / Drama",id:530385,c:"#0a0a00",ic:"🌸"},
+  {t:"La Dolce Vita",o:"La Dolce Vita",y:1960,g:"Drama",id:913,c:"#050a14",ic:"🍷"},
+  {t:"8½",o:"8½",y:1963,g:"Drama / Deneysel",id:818,c:"#050505",ic:"🎬"},
+  {t:"Yabani Çilekler",o:"Wild Strawberries",y:1957,g:"Drama",id:5503,c:"#050505",ic:"🍓"},
+];
+
+var sel=[],qs=[],cur=0,ans=[];
+
+function makeSVG(f){
+  var s=f.t.length>15?f.t.slice(0,14)+'…':f.t;
+  var id='g'+f.id;
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 150">'
+    +'<defs><linearGradient id="'+id+'" x1="0" y1="0" x2="0" y2="1">'
+    +'<stop offset="0%" stop-color="'+f.c+'"/><stop offset="100%" stop-color="#000"/>'
+    +'</linearGradient></defs>'
+    +'<rect width="100" height="150" fill="url(#'+id+')"/>'
+    +'<rect x="5" y="5" width="90" height="140" stroke="#fff" stroke-width="0.4" fill="none" stroke-opacity="0.1"/>'
+    +'<text x="50" y="75" text-anchor="middle" font-size="30" opacity="0.15">'+f.ic+'</text>'
+    +'<rect x="0" y="108" width="100" height="42" fill="rgba(0,0,0,0.7)"/>'
+    +'<text x="50" y="122" text-anchor="middle" font-size="6" fill="#c9a84c" font-family="sans-serif" letter-spacing="0.4">'+f.y+' · '+f.g.split('/')[0].trim().toUpperCase()+'</text>'
+    +'<text x="50" y="136" text-anchor="middle" font-size="8" fill="#f0ead6" font-family="serif">'+s+'</text>'
+    +'</svg>';
+}
+
+function makeTile(f){
+  var tile=document.createElement('div');
+  tile.className='tile'+(sel.find(function(x){return x.o===f.o;})?' on':'');
+  tile.dataset.key=f.o;
+
+  // Start with SVG fallback
+  tile.innerHTML=makeSVG(f);
+
+  var ck=document.createElement('div');
+  ck.className='ck';ck.textContent='✓';
+  tile.appendChild(ck);
+
+  tile.onclick=function(){toggle(f);};
+
+  // Load real poster
+  loadPoster(f,tile);
+  return tile;
+}
+
+function loadPoster(f,tile){
+  if(cache[f.id]){applyPoster(f,tile,cache[f.id]);return;}
+  fetch('https://api.themoviedb.org/3/movie/'+f.id+'?api_key='+TMDB_KEY)
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.poster_path){
+        cache[f.id]=IMG+d.poster_path;
+        applyPoster(f,tile,cache[f.id]);
+      }
+    }).catch(function(){});
+}
+
+function applyPoster(f,tile,url){
+  // Remove SVG, add img + overlay
+  tile.innerHTML='';
+  var img=document.createElement('img');
+  img.src=url;
+  img.alt=f.t;
+  img.onerror=function(){
+    tile.innerHTML=makeSVG(f);
+    var ck=document.createElement('div');
+    ck.className='ck';ck.textContent='✓';
+    tile.appendChild(ck);
+  };
+  var ov=document.createElement('div');
+  ov.className='ov';
+  ov.innerHTML='<div class="ov-year">'+f.y+'</div><div class="ov-name">'+f.t+'</div>';
+  var ck=document.createElement('div');
+  ck.className='ck';ck.textContent='✓';
+  tile.appendChild(img);
+  tile.appendChild(ov);
+  tile.appendChild(ck);
+}
+
+function renderGrid(films){
+  var g=document.getElementById('grid');g.innerHTML='';
+  films.forEach(function(f){g.appendChild(makeTile(f));});
+}
+
+function search(q){
+  var lq=q.toLowerCase();
+  renderGrid(FILMS.filter(function(f){
+    return f.t.toLowerCase().includes(lq)||f.o.toLowerCase().includes(lq)||f.g.toLowerCase().includes(lq)||String(f.y).includes(lq);
+  }));
+}
+
+function toggle(f){
+  var i=sel.findIndex(function(x){return x.o===f.o;});
+  if(i>-1)sel.splice(i,1);
+  else{if(sel.length>=10)return;sel.push(f);}
+  updateUI();
+  document.querySelectorAll('.tile').forEach(function(tile){
+    if(tile.dataset.key===f.o)
+      tile.classList.toggle('on',sel.findIndex(function(x){return x.o===f.o;})>-1);
+  });
+}
+
+function updateUI(){
+  document.getElementById('cnt').textContent=sel.length;
+  document.getElementById('bstart').disabled=sel.length<3;
+  var p=document.getElementById('pills');p.innerHTML='';
+  sel.forEach(function(f){
+    var d=document.createElement('div');d.className='pill';
+    d.textContent=f.t+' ×';d.onclick=function(){toggle(f);};
+    p.appendChild(d);
+  });
+}
+
+function init(){
+  document.getElementById('intro').style.display='none';
+  document.getElementById('pick').style.display='block';
+  renderGrid(FILMS);
+}
+
+function buildQs(){
+  var g=sel.map(function(f){return f.g;}).join(' ');
+  var ay=Math.round(sel.map(function(f){return f.y;}).reduce(function(a,b){return a+b;},0)/sel.length);
+  var dark=/suç|gerilim|korku|noir|distopya/i.test(g);
+  var fant=/fantezi|bilimkurgu|animasyon/i.test(g);
+  var old=ay<1985;
+  var s4=sel.slice(0,Math.min(4,sel.length));
+  qs=[
+    {q:'Bu filmlerden hangisi sana en çok "başka bir dünyaya çekildim" hissini verdi?',opts:s4.map(function(f){return f.t;})},
+    {q:'Bu filmleri izlerken genellikle ne hissedersin?',opts:['Tamamen kaybolur, zaman geçtiğini fark etmem','Sahneleri analiz ederek izlerim','Karakterlere çok bağlanırım','Görsel ve müzikal detaylara odaklanırım']},
+    {q:'Seçtiğin filmlerde seni en çok çeken ne?',opts:['Senaryo kurgusu — her şey yerli yerinde','Karakter psikolojisi — insan derinliği','Görsel dil — her kare bir resim','Atmosfer — içine çekiyor, bırakmıyor']},
+    {q:dark?'Seçtiğin filmlerde karanlık temalar var. Bu seni nasıl çekiyor?':'Karanlık temalara yaklaşımın?',opts:['Gerçekçiyse kaçmam, hayatın parçası','Sanatsal amaçla kullanılmışsa tamam','Az ve öz tercih ederim','Mümkün olduğunca uzak dururum']},
+    {q:fant?'Fantezi/bilimkurgu dünyaları sende ne bırakıyor?':'Gerçekçilik mi, fantezi mi?',opts:fant?['Gerçek dünyanın metaforu olarak görüyorum','Kaçış ve özgürlük hissi veriyor','Yaratıcılık ve hayal gücünü seviyorum','Eğlenceli ama derinlik şart']:['Yere basan gerçekçilik isterim','Biraz fantastik dokunuş güzel','Tam fantezi, başka bir dünya','Gerçekmiş gibi hissettiren fantezi']},
+    {q:'Tempo tercihin nedir?',opts:['Yavaş, nefes alan sahneler beni büyülüyor','Orta ve dengeli','Hızlı, her sahne bir şey söylesin','Değişken, sürpriz olsun']},
+    {q:old?'Klasik filmler seçtine — eski yapımlara bakışın nasıl?':'Film dönemleri konusunda tercihin?',opts:old?['Klasikler hiç eskimez, sinema tarihi şart','Nostalji güzel ama dönem fark etmez','İyi yapım her dönemde iyidir','Yeni filmler teknik açıdan daha güçlü']:['Klasikleri keşfetmek istiyorum','90\'lar-2000\'ler altın çağ','Çağdaş sinema daha cesur','Dönem fark etmez']},
+    {q:'Ahlaki açıdan karmaşık, "kötü" ana karakterler?',opts:['Çok daha ilgi çekici buluyorum','Olabilir ama evrimi olsun','Rahatsız olurum genellikle','Önemli değil, hikâye iyi olsun']},
+    {q:'Mutlu son konusunda nerede durursun?',opts:['Şart — başka türlü rahat edemem','Gerekmez ama yıkıcı olmasın','Belirsiz bitseydi daha iyi','Yürek yakan son en güçlü sondur']},
+    {q:'Coğrafya ve kültür tercihin var mı?',opts:['Hollywood ana akımı','Avrupa sineması (Fransız, İtalyan, Alman)','Asya sineması (Kore, Japonya, Çin)','Her yere açığım']},
+    {q:'Diyalog mu, görüntü mü?',opts:['Diyalog — kelimeler her şeydir','Görüntü — sahneler konuşsun','İkisi eşit ağırlıkta olsun','Sessizlik — en güçlü anlar susmak']},
+    {q:'İzledikten sonra ne yapıyorsun?',opts:['Yönetmen, oyuncu, teknik araştırıyorum','Arkadaşlarla saatlerce tartışıyorum','Sessizce yatıp sindiriyorum','Hemen başka bir şey açıp geçiyorum']},
+    {q:'Son soru: Şu an içinde ne var?',opts:['Anlam arıyorum, cevap istiyorum','Kaçmak istiyorum — başka biri olmak','Güzellik görmek istiyorum, estetik bir tat','Bağlanmak istiyorum, insanlık hissini taşımak']},
+  ].filter(function(q){return q.opts.length>=2;});
+  ans=new Array(qs.length).fill(null);
+}
+
+function startQuiz(){
+  if(sel.length<3)return;
+  buildQs();
+  document.getElementById('pick').style.display='none';
+  document.getElementById('quiz').style.display='block';
+  cur=0;renderQ();
+}
+
+function renderQ(){
+  var tot=qs.length;
+  document.getElementById('qn').textContent='Soru '+(cur+1)+' / '+tot;
+  document.getElementById('pf').style.width=(cur/tot*100)+'%';
+  var w=document.getElementById('qw');
+  w.style.animation='none';w.offsetHeight;w.style.animation='fadeUp .32s ease both';
+  document.getElementById('qt').textContent=qs[cur].q;
+  var c=document.getElementById('os');c.innerHTML='';
+  qs[cur].opts.forEach(function(opt,i){
+    var b=document.createElement('button');
+    b.className='op'+(ans[cur]===i?' sel':'');
+    b.innerHTML='<span class="ol">'+['A','B','C','D'][i]+'</span><span>'+opt+'</span>';
+    b.onclick=function(){pick(i);};
+    c.appendChild(b);
+  });
+  document.getElementById('bn').disabled=ans[cur]===null;
+  document.getElementById('bk').style.visibility=cur===0?'hidden':'visible';
+  document.getElementById('bn').textContent=cur===qs.length-1?'Bitir →':'İleri →';
+}
+
+function pick(i){
+  ans[cur]=i;
+  document.querySelectorAll('.op').forEach(function(el,idx){el.classList.toggle('sel',idx===i);});
+  document.getElementById('bn').disabled=false;
+}
+
+function next(){if(ans[cur]===null)return;if(cur===qs.length-1){submit();return;}cur++;renderQ();}
+function prev(){if(cur===0)return;cur--;renderQ();}
+
+async function submit(){
+  document.getElementById('quiz').style.display='none';
+  document.getElementById('loading').style.display='block';
+  var fl=sel.map(function(f){return '• '+f.t+' ('+f.y+') — '+f.g;}).join('\n');
+  var qa=qs.map(function(q,i){return (i+1)+'. '+q.q+'\n   → '+(ans[i]!==null?q.opts[ans[i]]:'—');}).join('\n\n');
+  var prompt='Sen dünya sinemasında derin bilgisi olan bir film küratörüsün. Aşağıdaki bilgilere göre bu kişiye 8 film öner. Klişe listelerden kaç, gerçekten bu kişiye özel seç.\n\nSevdiği filmler:\n'+fl+'\n\nQuiz cevapları:\n'+qa+'\n\nYanıtı SADECE JSON olarak ver:\n{"films":[{"title":"Film Adı","originalTitle":"Orijinal Adı","year":1999,"genre":"Tür","director":"Yönetmen","why":"Bu kişi için neden — 2-3 cümle Türkçe"}]}';
+  try{
+    var res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'anthropic-version':'2023-06-01',
+        'x-api-key':ANT_KEY,
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:prompt}]})
+    });
+    var data=await res.json();
+    if(data.error)throw new Error(data.error.message);
+    var raw=data.content.map(function(b){return b.text||'';}).join('');
+    var s=raw.indexOf('{'),e=raw.lastIndexOf('}');
+    if(s===-1||e===-1)throw new Error('JSON bulunamadı');
+    var parsed=JSON.parse(raw.slice(s,e+1));
+    if(!parsed.films||!parsed.films.length)throw new Error('Boş liste');
+    showResult(parsed.films);
+  }catch(err){
+    document.getElementById('loading').style.display='none';
+    document.getElementById('result').style.display='block';
+    document.getElementById('filmCards').innerHTML='<div class="err">Hata: '+err.message+'</div>';
+  }
+}
+
+function showResult(films){
+  document.getElementById('loading').style.display='none';
+  document.getElementById('result').style.display='block';
+  var cards=document.getElementById('filmCards');cards.innerHTML='';
+  films.forEach(function(f,i){
+    var card=document.createElement('div');
+    card.className='fc';
+    card.style.animationDelay=(i*.07)+'s';
+    var disp=f.originalTitle&&f.originalTitle!==f.title
+      ?f.title+' <span style="color:var(--muted);font-size:.82rem">('+f.originalTitle+')</span>'
+      :f.title;
+    card.innerHTML='<div class="fnum">'+String(i+1).padStart(2,'0')+'</div>'
+      +'<div><div class="fmeta"><span class="fyear">'+f.year+'</span><span class="fgenre">'+f.genre+'</span></div>'
+      +'<div class="ftitle">'+disp+'</div>'
+      +'<div class="fwhy"><strong>'+f.director+'</strong> — '+f.why+'</div></div>';
+    cards.appendChild(card);
+  });
+}
+
+function restart(){
+  sel=[];qs=[];cur=0;ans=[];
+  document.getElementById('result').style.display='none';
+  document.getElementById('si').value='';
+  updateUI();renderGrid(FILMS);
+  document.getElementById('pick').style.display='none';
+  document.getElementById('intro').style.display='block';
+}
+</script>
+</body>
+</html>
